@@ -76,6 +76,7 @@ def transcribe():
         return flask.abort(500, str(e))
 
 
+
 def transcribe_audio(audio_base64):
     api_key = os.environ['OPENAI_API_KEY']
     api_url = 'http://localhost:5000/transcribe'
@@ -91,6 +92,45 @@ def transcribe_audio(audio_base64):
         raise Exception(f'OpenAI API returned {response.status_code}')
     
     return response.json()
+
+
+
+
+@app.route('/text', methods=['POST'])
+def text():
+    
+    return {
+        "ff":"kgkg"
+    }
+    
+    
+    
+    request_data = flask.request.data.decode()
+    # print(request_data)
+    
+    request_json = json.loads(request_data)
+
+    # Get the audio file from the request
+    audio_base64 = request_json.get('audio_data')
+    print(audio_base64)
+    if not audio_base64:
+        return flask.abort(400, 'No audio data found')
+    
+    
+    audio_file = save_audio(audio_base64)
+
+    # Call the OpenAI API
+    try:
+        # response = transcribe_audio(audio_base64)
+       
+        # transcription = response['transcription']
+        
+        transcription="jjjjjjjjjj"
+        return {'transcription': transcription}
+    except Exception as e:
+        return flask.abort(500, str(e))
+
+
 
 
 if __name__ == '__main__':
