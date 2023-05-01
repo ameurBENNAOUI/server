@@ -13,6 +13,61 @@ import datetime
 import os
 import tempfile
 
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager, create_access_token
+from werkzeug.security import generate_password_hash, check_password_hash
+# from flask import current_app
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['JWT_SECRET_KEY'] = 'hello'
+
+
+
+db = SQLAlchemy(app)
+jwt = JWTManager(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+
+# db.create_all()
+
+
+
+@app.before_first_request
+def setup_database():
+    db.create_all()
+    create_example_user()
+
+def create_example_user():
+    user_exists = User.query.filter_by(username='a').first()
+    if user_exists is None:
+        hashed_password = generate_password_hash('a')
+        user = User(username='a', password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+
+
+
+
+
+@app.route('/auth', methods=['POST'])
+def authenticate():
+    # return "aa"
+    data = request.get_json()
+    user = User.query.filter_by(username=data['username']).first()
+
+    if not user or not check_password_hash(user.password, data['password']):
+        return jsonify({"error": "Invalid username or password"}), 401
+
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token)
+
+
+
 def save_audio(base64_data):
     # Decode the base64 data
     audio_data = base64.b64decode(base64_data)
@@ -34,18 +89,16 @@ def save_audio(base64_data):
 
 
 
-app = flask.Flask(__name__)
+# app = flask.Flask(__name__)
 
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
     
     request_data = flask.request.data.decode()
-    # print(request_data)
     
     request_json = json.loads(request_data)
 
-    # Get the audio file from the request
     audio_base64 = request_json.get('audio_data')
     print(audio_base64)
     if not audio_base64:
@@ -54,23 +107,12 @@ def transcribe():
     
     audio_file = save_audio(audio_base64)
 
-    # print (flask.request.files)
-    # Get the audio file from the request
-    # file = flask.request.files['audio']
-    # if not file:
-    #     return flask.abort(400, 'No audio file found')
-    # audio_bytes = file.read()
+
     
-    # # Convert the audio to base64
-    # audio_base64 = base64.b64encode(audio_bytes).decode()
-    
-    # Call the OpenAI API
     try:
-        # response = transcribe_audio(audio_base64)
-       
-        # transcription = response['transcription']
-        
-        transcription="jjjjjjjjjj"
+
+        transcription="As an IT Specialist, you will be responsible for providing technical support and assistance to our organization's computer systems, networks, and software applications. Your primary tasks will include troubleshooting hardware and software issues, setting up and maintaining computer systems, and ensuring the security and efficiency of our IT infrastructure."
+        # transcription="jjjjjjjjjj"
         return {'transcription': transcription}
     except Exception as e:
         return flask.abort(500, str(e))
@@ -99,18 +141,41 @@ def transcribe_audio(audio_base64):
 @app.route('/text', methods=['POST'])
 def text():
     
+    # return {
+    #     "ff":"kgkg"
+    # }
+    
     return {
-        "ff":"kgkg"
-    }
-    
-    
+  "numberOfHires": ["1", "2", "3"],
+  "jobTitles": ["Developer", "Designer", "Manager"],
+  "locations": ["New York", "Los Angeles", "Chicago"],
+  "genericJobDetails": ["Full-time", "Part-time", "Freelance"],
+  "industries": ["Software", "Design", "Marketing"],
+  "postcode": "12345",
+  "description": "Job description text..."
+}
+
+
+@app.route('/send_audio_and_data', methods=['POST'])
+def send_audio_and_data():
     
     request_data = flask.request.data.decode()
+    
+    # request_json = json.loads(request_data)
+    
     # print(request_data)
     
-    request_json = json.loads(request_data)
+    return {
+  "numberOfHires": ["1", "2", "3"],
+  "jobTitles": ["Developer", "Designer", "Manager"],
+  "locations": ["New York", "Los Angeles", "Chicago"],
+  "genericJobDetails": ["Full-time", "Part-time", "Freelance"],
+  "industries": ["Software", "Design", "Marketing"],
+  "postcode": "12345",
+  "description": "New Data Job description text..."
+}    
+    
 
-    # Get the audio file from the request
     audio_base64 = request_json.get('audio_data')
     print(audio_base64)
     if not audio_base64:
@@ -119,13 +184,12 @@ def text():
     
     audio_file = save_audio(audio_base64)
 
-    # Call the OpenAI API
+
+    
     try:
-        # response = transcribe_audio(audio_base64)
-       
-        # transcription = response['transcription']
-        
-        transcription="jjjjjjjjjj"
+
+        transcription="As an IT Specialist, you will be responsible for providing technical support and assistance to our organization's computer systems, networks, and software applications. Your primary tasks will include troubleshooting hardware and software issues, setting up and maintaining computer systems, and ensuring the security and efficiency of our IT infrastructure."
+        # transcription="jjjjjjjjjj"
         return {'transcription': transcription}
     except Exception as e:
         return flask.abort(500, str(e))
@@ -133,5 +197,17 @@ def text():
 
 
 
+
+
+
 if __name__ == '__main__':
+    # with app.app_context():
+    #     db.create_all()
+    
+    #     # Add example user
+    # hashed_password = generate_password_hash('example_password')
+    # user = User(username='example_username', password=hashed_password)
+    # db.session.add(user)
+    # db.session.commit()
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
