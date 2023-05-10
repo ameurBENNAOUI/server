@@ -19,6 +19,10 @@ from flask_jwt_extended import JWTManager, create_access_token
 from werkzeug.security import generate_password_hash, check_password_hash
 # from flask import current_app
 
+from flask_socketio import SocketIO, emit
+
+
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['JWT_SECRET_KEY'] = 'hello'
@@ -35,6 +39,18 @@ class User(db.Model):
 
 # db.create_all()
 
+
+socketio = SocketIO(app)
+
+
+
+@socketio.on('audio_data')
+def handle_audio_data(data):
+    # TODO: Implement real-time transcription here
+    print(data)
+
+    # Emit the transcribed text to the client
+    emit('transcription', {'transcription': 'Transcribed text'})
 
 
 @app.before_first_request
@@ -68,6 +84,27 @@ def authenticate():
 
 
 
+@app.route('/auth/google', methods=['POST'])
+def authenticate_with_google():
+    data = request.get_json()
+    name = data['name']
+    email = data['email']
+
+    # Check if the user exists in your database using their email
+    user = User.query.filter_by(email=email).first()
+
+    # If they don't exist, create a new user with the received name and email
+    if user is None:
+        hashed_password = generate_password_hash('')  # You can generate a random password or use an empty string
+        user = User(username=name, password=hashed_password, email=email)
+        db.session.add(user)
+        db.session.commit()
+
+    # Generate an access token for the user
+    access_token = create_access_token(identity=user.id)
+    return jsonify(access_token=access_token)
+
+
 def save_audio(base64_data):
     # Decode the base64 data
     audio_data = base64.b64decode(base64_data)
@@ -89,7 +126,132 @@ def save_audio(base64_data):
 
 
 
+job_services = [
+    {
+        "free_plan": False,
+        "service_name":"Linkdin",
+        "service": "linkedin",
+        "logo": "/static/img/linkedin.png",
+        "checked": False,
+        "cost": 148
+    },
+    {
+        "free_plan": True,
+        "service_name":"Linkdin",
+
+        "service": "linkdin",
+        "logo": "/static/img/indeed.png",
+        "checked": False,
+        "cost": 0
+    },
+    {
+        "free_plan": False,
+        "service_name":"cv library",
+
+        "service": "cv_library",
+        "logo": "/static/img/cv_library.png",
+        "checked": False,
+        "cost": 50
+    },
+    
+    
+]
+
+@app.route('/job_service', methods=['GET'])
+def job_service():
+    return jsonify(job_services)
+
+
+schedular = {
+    "social":["facebook", "instagram"],
+    "schedular":[
+    {
+        "service_name":"Linkdin",
+        "title": "social media text auto generated here ...",
+        "image_url": "/static/img/schedular/1.jpg",
+        "time": "Today ASAP",
+    },
+    {
+        "service_name":"Linkdin",
+        "title": "social media text auto generated here ...",
+        "image_url": "/static/img/schedular/2.jpg",
+        "time": "Today ASAP",
+    },    
+    {
+        "service_name":"Linkdin",
+        "title": "social media text auto generated here ...",
+        "image_url": "/static/img/schedular/3.jpg",
+        "time": "Today ASAP",
+    },
+     {
+        "service_name":"Linkdin",
+        "title": "social media text auto generated here ...",
+        "image_url": "/static/img/schedular/4.jpg",
+        "time": "Today ASAP",
+    },
+    
+]}
+
+
+@app.route('/schedular', methods=['GET'])
+def schedular_service():
+    return jsonify(schedular)
+
+
+election = {
+                "jobElection":"fgddf", 
+                "isSwitched":True,
+                # "isSwitched":True
+                "premiumJob":    [
+                {
+                    "free_plan": False,
+                    "service_name":"Linkdin",
+                    "service": "linkedin",
+                    "logo": "/static/img/linkedin.png",
+                    "checked": False,
+                    "cost": 148
+                },
+
+                {
+                    "free_plan": False,
+                    "service_name":"cv library",
+
+                    "service": "cv_library",
+                    "logo": "/static/img/cv_library.png",
+                    "checked": False,
+                    "cost": 50
+                },
+                
+                
+            ]
+    }
+
+@app.route('/election', methods=['GET'])
+def election_service():
+    return jsonify(election)
+
+success = {
+                "jobElection":"fgddf", 
+                # "isSwitched":True,
+           
+    }
+
+
+@app.route('/success', methods=['GET'])
+def success_service():
+    return jsonify(success)
+
+
+
 # app = flask.Flask(__name__)
+
+
+# from flask import Flask, render_template
+
+
+# if __name__ == '__main__':
+#     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+
 
 
 @app.route('/transcribe', methods=['POST'])
@@ -100,7 +262,7 @@ def transcribe():
     request_json = json.loads(request_data)
 
     audio_base64 = request_json.get('audio_data')
-    print(audio_base64)
+    # print(audio_base64)
     if not audio_base64:
         return flask.abort(400, 'No audio data found')
     
@@ -209,5 +371,8 @@ if __name__ == '__main__':
     # user = User(username='example_username', password=hashed_password)
     # db.session.add(user)
     # db.session.commit()
+    # app.run(host='0.0.0.0', port=5000, debug=True)
     app.run(host='0.0.0.0', port=5000, debug=True)
-    
+    # socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+
+
