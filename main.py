@@ -83,7 +83,7 @@ def authenticate():
     return jsonify(access_token=access_token)
 
 
-
+# /////
 @app.route('/auth/google', methods=['POST'])
 def authenticate_with_google():
     data = request.get_json()
@@ -227,7 +227,7 @@ election = {
     }
 
 @app.route('/election', methods=['GET'])
-def election_service():
+def election_service():!
     return jsonify(election)
 
 success = {

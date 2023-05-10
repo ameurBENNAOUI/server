@@ -1,0 +1,28 @@
+String jsonJobs = '''
+[
+  {
+    "title": "Software Engineer",
+    "company": "Tech Company",
+    "location": "New York",
+    "job_type": "Full Time",
+    "salary": "90000",
+    "number_of_applicants": 23
+  },
+  {
+    "title": "Software Engineer",
+    "company": "Tech Company",
+    "location": "New York",
+    "job_type": "Full Time",
+    "salary": "90000",
+    "number_of_applicants": 23
+  },
+  {
+    "title": "Software Engineer",
+    "company": "Tech Company",
+    "location": "New York",
+    "job_type": "Full Time",
+    "salary": "90000",
+    "number_of_applicants": 23
+  }
+]
+''';
